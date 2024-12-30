@@ -26,6 +26,7 @@ export const tweetSearchSchema = z.object({
 
 export const engagementSchema = z.object({
   shouldEngage: z.boolean(),
+  walletAddress: z.string().optional(),
   reason: z.string(),
   priority: z.number().min(1).max(10),
   confidence: z.number().min(0).max(1),
