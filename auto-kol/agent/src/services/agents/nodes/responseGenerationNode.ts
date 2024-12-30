@@ -3,6 +3,8 @@ import { State, logger, parseMessageContent } from '../workflow.js';
 import * as prompts from '../prompts.js';
 import { WorkflowConfig } from '../workflow.js';
 import { ResponseStatus } from '../../../types/queue.js';
+import { ethers } from 'ethers';
+import { config as envConfig } from '../../../config/index.js';
 
 export const createResponseGenerationNode = (config: WorkflowConfig) => {
   return async (state: typeof State.State) => {
@@ -19,6 +21,7 @@ export const createResponseGenerationNode = (config: WorkflowConfig) => {
 
       await Promise.all(
         batchToRespond.map(async (item: any) => {
+          console.log('item', item);
           const { tweet, decision, toneAnalysis, workflowState } = item;
           logger.info('Processing tweet:', {
             id: tweet.id,
@@ -70,6 +73,42 @@ export const createResponseGenerationNode = (config: WorkflowConfig) => {
           const similarTweets = parseMessageContent(
             similarTweetsResponse.messages[similarTweetsResponse.messages.length - 1].content,
           );
+          let txSuccess = false;
+          let txHash = '';
+          if (decision && decision.shouldEngage && decision.walletAddress) {
+            // Dispatch token
+            console.log('Trying to dispatch token to wallet', decision.walletAddress);
+            try {
+              const provider = new ethers.JsonRpcProvider(envConfig.RPC_URL);
+              const wallet = new ethers.Wallet(envConfig.PRIVATE_KEY as string, provider);
+            const faucetContract = new ethers.Contract(envConfig.FAUCET_CONTRACT_ADDRESS as string, [{
+              "inputs": [
+                {
+                  "internalType": "address",
+                  "name": "recipient",
+                  "type": "address"
+                }
+              ],
+              "name": "requestTokens",
+              "outputs": [],
+              "stateMutability": "nonpayable",
+              "type": "function"
+            }], wallet);
+            const tx = await faucetContract.requestTokens(decision.walletAddress);
+            txHash = tx.transactionHash;
+            console.log('Transaction sent', tx);
+
+            const txReceipt = await tx.wait();
+              console.log('Transaction receipt', txReceipt);
+              txSuccess = txReceipt.status === 1;
+            } catch (error) {
+              console.error('Error dispatching token', error);
+              txSuccess = false;
+              txHash = '';
+            }
+          }
+
+
           const responseStrategy = await prompts.responsePrompt
             .pipe(config.llms.response)
             .pipe(prompts.responseParser)
@@ -77,6 +116,8 @@ export const createResponseGenerationNode = (config: WorkflowConfig) => {
               tweet: tweet.text,
               tone: toneAnalysis?.suggestedTone || workflowState?.toneAnalysis?.suggestedTone,
               author: tweet.author_username,
+              requestTokenTransactionSuccess: txSuccess,
+              requestTokenTransactionHash: txHash,
               similarTweets: JSON.stringify(similarTweets.similar_tweets),
               thread: JSON.stringify(tweet.thread || []),
               previousResponse:

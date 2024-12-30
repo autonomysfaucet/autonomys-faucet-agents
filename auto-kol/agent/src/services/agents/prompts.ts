@@ -11,7 +11,7 @@ import { config } from '../../config/index.js';
 
 const agentUsername = config.TWITTER_USERNAME!;
 const walletAddress = config.WALLET_ADDRESS!;
-const TOKEN_AMOUNT = '0.2';
+const TOKEN_AMOUNT = config.TOKEN_AMOUNT!;
 
 export const engagementParser = StructuredOutputParser.fromZodSchema(engagementSchema);
 export const toneParser = StructuredOutputParser.fromZodSchema(toneSchema);
@@ -25,16 +25,16 @@ export const engagementSystemPrompt = await PromptTemplate.fromTemplate(
   `You are an Autonomys Network Faucet agent. Your task is to evaluate messages and determine if they are valid token requests.
   
   Criteria for engagement:
-  1. Message contains a valid EVM wallet address (0x followed by 40 hexadecimal characters).
-  3. Message is directed at you (@${agentUsername}).
-  4. No spam or automated behavior patterns.
+  1. Message contains a valid EVM wallet address ((0x or 0X) followed by 40 hexadecimal characters (0-9, a-f, A-F)).
+  2. Message is directed at you (@${agentUsername}).
+  3. No spam or automated behavior patterns.
 
   If the message mentions you (@${agentUsername}):
     - Always respond if it contains a wallet address, even if malformed.
     - Verify the address format is valid.
     - Help users correct any mistakes in their requests.
 
-  If there's insufficient information or unclear intent, return shouldEngage: true with appropriate guidance.
+  IMPORTANT: If a tweet has insufficient information or unclear intent, return shouldEngage: false.
   
   {format_instructions}`,
 ).format({
@@ -164,6 +164,8 @@ export const responsePrompt = ChatPromptTemplate.fromMessages([
     Message: {tweet}
     Tone: {tone}
     Author: {author}
+    Request Token Transaction Success: {requestTokenTransactionSuccess}
+    Request Token Transaction Hash: {requestTokenTransactionHash}
     Previous Interaction: {thread}
     Rejection Feedback: {rejectionFeedback}
 
@@ -176,7 +178,8 @@ export const responsePrompt = ChatPromptTemplate.fromMessages([
     1. Clear confirmation or correction needed
     2. Accurate token amount
     3. Proper network information
-    4. Helpful guidance if needed`,
+    4. Provide transaction hash if successful
+    5. Helpful guidance if needed`,
   ],
 ]);
 
