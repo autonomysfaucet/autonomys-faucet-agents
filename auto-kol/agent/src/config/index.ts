@@ -59,4 +59,8 @@ export const config = {
 
   // POSTING TWEETS PERMISSION
   POST_TWEETS: process.env.POST_TWEETS === 'true',
+
+  // FAUCET CONFIG
+  FAUCET_CONTRACT_ADDRESS: process.env.FAUCET_CONTRACT_ADDRESS,
+  TOKEN_AMOUNT: process.env.TOKEN_AMOUNT,
 };
