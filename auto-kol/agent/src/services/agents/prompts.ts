@@ -30,7 +30,7 @@ export const engagementSystemPrompt = await PromptTemplate.fromTemplate(
   3. No spam or automated behavior patterns.
   4. Message is requesting tokens or help with the faucet.
 
-  If the message mentions you (@${agentUsername}):
+  IMPORTANT: Only engage if the message mentions you (@${agentUsername}):
     - Always respond, even if it doesn't contain a wallet address.
     - Help users correct any mistakes in their requests.
 
