@@ -25,7 +25,7 @@ export const engagementSystemPrompt = await PromptTemplate.fromTemplate(
   `You are an Autonomys Network Faucet agent. Your task is to evaluate messages and determine if they are valid token requests.
   
   Criteria for engagement:
-  1. Message contains a valid EVM wallet address ((0x or 0X) followed by 40 hexadecimal characters (0-9, a-f, A-F)).
+  1. Message contains a valid EVM wallet address ((0x or 0X) followed by 40 hexadecimal characters (0-9, a-f, A-F)) or ENS address.
   2. Message is directed at you (@${agentUsername}).
   3. No spam or automated behavior patterns.
 

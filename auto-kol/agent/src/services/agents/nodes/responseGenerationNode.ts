@@ -5,6 +5,11 @@ import { WorkflowConfig } from '../workflow.js';
 import { ResponseStatus } from '../../../types/queue.js';
 import { ethers } from 'ethers';
 import { config as envConfig } from '../../../config/index.js';
+import { EnsResolver } from 'ethers';
+
+const FAUCET_CONTRACT_ABI = [
+  "function requestTokens(address recipient) external",
+] as const;
 
 export const createResponseGenerationNode = (config: WorkflowConfig) => {
   return async (state: typeof State.State) => {
@@ -73,35 +78,36 @@ export const createResponseGenerationNode = (config: WorkflowConfig) => {
           const similarTweets = parseMessageContent(
             similarTweetsResponse.messages[similarTweetsResponse.messages.length - 1].content,
           );
+          let isAddressValid = false;
+          let walletAddress = decision.walletAddress || decision.ensAddress;
           let txSuccess = false;
           let txHash = '';
-          if (decision && decision.shouldEngage && decision.walletAddress) {
-            // Dispatch token
-            console.log('Trying to dispatch token to wallet', decision.walletAddress);
+          if (decision && decision.shouldEngage && (decision.walletAddress || decision.ensAddress)) {
             try {
               const provider = new ethers.JsonRpcProvider(envConfig.RPC_URL);
-              const wallet = new ethers.Wallet(envConfig.PRIVATE_KEY as string, provider);
-            const faucetContract = new ethers.Contract(envConfig.FAUCET_CONTRACT_ADDRESS as string, [{
-              "inputs": [
-                {
-                  "internalType": "address",
-                  "name": "recipient",
-                  "type": "address"
-                }
-              ],
-              "name": "requestTokens",
-              "outputs": [],
-              "stateMutability": "nonpayable",
-              "type": "function"
-            }], wallet);
-            const tx = await faucetContract.requestTokens(decision.walletAddress);
-            txHash = tx.hash;
-            console.log('Transaction sent', tx);
 
-            const txReceipt = await tx.wait();
-              console.log('Transaction receipt', txReceipt);
-              txHash = txReceipt.hash;
-              txSuccess = txReceipt.status === 1;
+              if (decision.walletAddress) {
+                walletAddress = ethers.getAddress(decision.walletAddress);
+                isAddressValid = ethers.isAddress(walletAddress);
+              } else if (decision.ensAddress) {
+                console.log('Resolving ENS address', decision.ensAddress);
+                const ensWalletAddress = await provider.resolveName(decision.ensAddress);
+                isAddressValid = ethers.isAddress(ensWalletAddress);
+                if (isAddressValid) walletAddress = ensWalletAddress;
+              }
+              // Dispatch token
+              console.log('Trying to dispatch token to wallet', walletAddress);
+              
+              const wallet = new ethers.Wallet(envConfig.PRIVATE_KEY as string, provider);
+              const faucetContract = new ethers.Contract(envConfig.FAUCET_CONTRACT_ADDRESS as string, FAUCET_CONTRACT_ABI, wallet);
+              const tx = await faucetContract.requestTokens(walletAddress);
+              txHash = tx.hash;
+              console.log('Transaction sent', tx);
+
+              const txReceipt = await tx.wait();
+                console.log('Transaction receipt', txReceipt);
+                txHash = txReceipt.hash;
+                txSuccess = txReceipt.status === 1;
             } catch (error) {
               console.error('Error dispatching token', error);
               txSuccess = false;
