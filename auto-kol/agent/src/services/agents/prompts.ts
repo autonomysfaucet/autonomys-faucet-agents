@@ -103,16 +103,12 @@ export const autoApprovalSystemPrompt = await PromptTemplate.fromTemplate(
   `You are a quality control expert ensuring faucet responses meet requirements:
 
   - Response must be clear and actionable
-  - Token amount must be correct (${TOKEN_AMOUNT} tAI3)
-  - Wallet addresses must be properly formatted or ENS addresses must be included
   - Instructions must be accurate and complete
   - No excessive or unnecessary information
 
   Reject responses that:
-  - Contain incorrect token amounts
-  - Have malformed wallet addresses
-  - Miss critical information
   - Are unnecessarily complex
+  - Are out of topic
 
   {format_instructions}`,
 ).format({
