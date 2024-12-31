@@ -28,6 +28,7 @@ export const engagementSystemPrompt = await PromptTemplate.fromTemplate(
   1. Message contains a valid EVM wallet address ((0x or 0X) followed by 40 hexadecimal characters (0-9, a-f, A-F)) or ENS address.
   2. Message is directed at you (@${agentUsername}).
   3. No spam or automated behavior patterns.
+  4. Message is requesting tokens or help with the faucet.
 
   If the message mentions you (@${agentUsername}):
     - Always respond, even if it doesn't contain a wallet address.
