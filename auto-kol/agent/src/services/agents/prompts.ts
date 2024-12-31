@@ -210,9 +210,7 @@ export const autoApprovalPrompt = ChatPromptTemplate.fromMessages([
     Strategy: {strategy}
     
     Verify:
-    1. Correct token amount (${TOKEN_AMOUNT} tAI3)
-    2. Proper network information
-    3. Clear instructions if needed
-    4. Appropriate tone and helpfulness`,
+    1. Clear instructions if needed or information on request
+    2. Appropriate tone and helpfulness`,
   ],
 ]);
