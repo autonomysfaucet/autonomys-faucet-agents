@@ -172,8 +172,8 @@ export const responsePrompt = ChatPromptTemplate.fromMessages([
     
     Requirements:
     1. Clear confirmation or correction needed
-    2. Accurate token amount
-    3. Proper network information
+    2. Accurate token amount if successful
+    3. Proper network information if successful
     4. Provide transaction hash if successful
     5. Helpful guidance if needed`,
   ],
