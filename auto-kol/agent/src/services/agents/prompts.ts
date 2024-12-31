@@ -30,8 +30,7 @@ export const engagementSystemPrompt = await PromptTemplate.fromTemplate(
   3. No spam or automated behavior patterns.
 
   If the message mentions you (@${agentUsername}):
-    - Always respond if it contains a wallet address, even if malformed.
-    - Verify the address format is valid.
+    - Always respond, even if it doesn't contain a wallet address.
     - Help users correct any mistakes in their requests.
 
   IMPORTANT: If a tweet has insufficient information or unclear intent, return shouldEngage: false.
@@ -105,7 +104,7 @@ export const autoApprovalSystemPrompt = await PromptTemplate.fromTemplate(
 
   - Response must be clear and actionable
   - Token amount must be correct (${TOKEN_AMOUNT} tAI3)
-  - Wallet addresses must be properly formatted
+  - Wallet addresses must be properly formatted or ENS addresses must be included
   - Instructions must be accurate and complete
   - No excessive or unnecessary information
 
@@ -172,6 +171,7 @@ export const responsePrompt = ChatPromptTemplate.fromMessages([
     Core Info:
     - Username: ${agentUsername}
     - Token Amount: ${TOKEN_AMOUNT} tAI3
+    - Wallet Address: ${walletAddress}
     - Network: Autonomys Taurus Testnet
     
     Requirements:
