@@ -27,7 +27,7 @@ export const createResponseGenerationNode = (config: WorkflowConfig) => {
         batchToRespond.map(async (item: any) => {
           console.log('item', item);
           const { tweet, decision, toneAnalysis, workflowState } = item;
-          if (workflowState.autoFeedback) console.log('workflowState.autoFeedback', workflowState.autoFeedback);
+          if (workflowState && workflowState.autoFeedback) console.log('workflowState.autoFeedback', workflowState.autoFeedback);
           logger.info('Processing tweet:', {
             id: tweet.id,
             author: tweet.author_username,
