@@ -95,11 +95,12 @@ export const createResponseGenerationNode = (config: WorkflowConfig) => {
               "type": "function"
             }], wallet);
             const tx = await faucetContract.requestTokens(decision.walletAddress);
-            txHash = tx.transactionHash;
+            txHash = tx.hash;
             console.log('Transaction sent', tx);
 
             const txReceipt = await tx.wait();
               console.log('Transaction receipt', txReceipt);
+              txHash = txReceipt.hash;
               txSuccess = txReceipt.status === 1;
             } catch (error) {
               console.error('Error dispatching token', error);
