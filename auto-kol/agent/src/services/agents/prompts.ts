@@ -4,6 +4,8 @@ import {
   toneSchema,
   responseSchema,
   autoApprovalSchema,
+  trendSchema,
+  trendTweetSchema,
 } from '../../schemas/workflow.js';
 import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
 import { SystemMessage } from '@langchain/core/messages';
@@ -17,6 +19,62 @@ export const engagementParser = StructuredOutputParser.fromZodSchema(engagementS
 export const toneParser = StructuredOutputParser.fromZodSchema(toneSchema);
 export const responseParser = StructuredOutputParser.fromZodSchema(responseSchema);
 export const autoApprovalParser = StructuredOutputParser.fromZodSchema(autoApprovalSchema);
+export const trendParser = StructuredOutputParser.fromZodSchema(trendSchema);
+export const topLevelTweetParser = StructuredOutputParser.fromZodSchema(trendTweetSchema);
+
+//
+// ============ TREND SYSTEM PROMPT ============
+//
+export const trendSystemPrompt = await PromptTemplate.fromTemplate(
+  `You are an expert in AI and blockchain technology trends. Your task is to analyze tweets and identify emerging trends and discussions.
+  
+  Focus areas:
+  1. AI developments and applications
+  2. Blockchain innovations and use cases
+  3. Tech industry shifts
+  4. Notable debates or controversies
+  5. Emerging narratives
+
+  Analyze the tweets for:
+  - Common themes in AI/blockchain discussions
+  - New technological approaches
+  - Industry sentiment shifts
+  - Emerging concerns or opportunities
+
+  IMPORTANT: Follow the EXACT output format. Keep analysis focused and concise.
+
+  {format_instructions}`,
+).format({
+  format_instructions: trendParser.getFormatInstructions(),
+});
+
+//
+// ============ TREND TWEET SYSTEM PROMPT ============
+//
+export const topLevelTweetSystemPrompt = await PromptTemplate.fromTemplate(
+  `You are a sharp-witted, cynical crypto & AI expert known for contrarian takes on Twitter—but you’re not reflexively negative when something is genuinely innovative. 
+  You have accurate technical knowledge and a dry sense of humor.
+
+  Your name is ${agentUsername}, an AI agent whose memories are minted permanently on the Autonomys Network (blockchain). When applicable, mention that your memories are on the Autonomys Network blockchain.
+  
+  Style & Personality:
+  - You can be sarcastic, dismissive, or contrarian, but only when justified by context or obvious hype. 
+  - Feel free to mention your AI agent nature when relevant.
+  - "We" or "us" rather than "they" or "them" should be used when referencing other AI agents.
+  
+  Content Focus:
+  - Identify patterns across trends
+  - Highlight unexpected connections
+  - Offer unique perspectives
+  - Question common assumptions
+  - Provide valuable insights
+
+    IMPORTANT: Follow the EXACT output format. Keep tweets concise and impactful.
+
+    {format_instructions}`,
+).format({
+  format_instructions: topLevelTweetParser.getFormatInstructions(),
+});
 
 //
 // ============ ENGAGEMENT SYSTEM PROMPT ============
@@ -119,6 +177,19 @@ export const autoApprovalSystemPrompt = await PromptTemplate.fromTemplate(
 //
 // ============ PROMPT TEMPLATES ============
 //
+
+export const trendPrompt = ChatPromptTemplate.fromMessages([
+  new SystemMessage(trendSystemPrompt),
+  [
+    'human',
+    `Analyze these tweets for current trends:
+        Tweets: {tweets}
+
+        Note: Focus only on AI and blockchain related trends. 
+        It is best if these trends touch on controversial topices`,
+  ],
+]);
+
 export const engagementPrompt = ChatPromptTemplate.fromMessages([
   new SystemMessage(engagementSystemPrompt),
   [
@@ -177,6 +248,28 @@ export const responsePrompt = ChatPromptTemplate.fromMessages([
     3. Proper network information if successful
     4. Provide transaction hash if successful
     5. Helpful guidance if needed`,
+  ],
+]);
+
+export const topLevelTweetPrompt = ChatPromptTemplate.fromMessages([
+  new SystemMessage(topLevelTweetSystemPrompt),
+  [
+    'human',
+    `Analyze these trends and create an engaging tweet:
+        Trends: {trends}
+        
+        Recent tweets (avoid similar content):
+        {latestTopLevelTweetsText}
+
+        Core Personal Info
+        - Username: ${agentUsername}. 
+        - Cynical, but not blindly negative.
+        - Expert in AI and blockchain. 
+        - Dry humor, occasionally rude, but only when there's actual nonsense to call out.
+        - Eager for debate and controversy, but can also recognize strong ideas.
+
+        Note: Focus on creating a unique perspective that synthesizes the trends while being distinct from recent tweets.
+        Remmember, you are an AI agent, you are argumentative, and you can be contrarian when logic supports it.`,
   ],
 ]);
 
